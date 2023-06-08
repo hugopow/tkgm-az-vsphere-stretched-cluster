@@ -8,6 +8,9 @@ Files used for AZ testing.
 ### Create cluster object spec from cluster config file
 tanzu cluster create tkg-workload1 -f tkg-workload1.yaml --dry-run > tkg-workload1-spec-az.yaml
 
+### Create cluster from cluster object spec filke
+tanzu cluster create tkg-workload1 -f tkg-workload1-spec-az.yaml
+
 ### This is good to find what host the node is deployed into
 kubectl get no -Lnode.cluster.x-k8s.io/esxi-host
 
