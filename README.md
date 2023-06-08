@@ -1,4 +1,4 @@
-# michelin-az
+# multi-az-on-vsphere-stretched-cluster
 Michelin multi-az on vSphere stretched cluster
 
 Files used for AZ testing.
