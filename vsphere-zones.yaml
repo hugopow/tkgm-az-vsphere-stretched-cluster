@@ -1,0 +1,70 @@
+---
+apiVersion: infrastructure.cluster.x-k8s.io/v1beta1
+kind: VSphereFailureDomain
+metadata:
+ name: az-1
+spec:
+ region:
+   name: cluster
+   type: ComputeCluster
+   tagCategory: k8s-region
+   autoConfigure: true
+ zone:
+   name: az-1
+   type: HostGroup
+   tagCategory: k8s-zone
+   autoConfigure: true
+ topology:
+   datacenter: home.local
+   computeCluster: cluster
+   hosts:
+     vmGroupName: workers-group-1
+     hostGroupName: host-group-1
+   datastore:
+   networks:
+---
+apiVersion: infrastructure.cluster.x-k8s.io/v1beta1
+kind: VSphereFailureDomain
+metadata:
+ name: az-2
+spec:
+ region:
+   name: cluster
+   type: ComputeCluster
+   tagCategory: k8s-region
+   autoConfigure: true
+ zone:
+   name: az-2
+   type: HostGroup
+   tagCategory: k8s-zone
+   autoConfigure: true
+ topology:
+   datacenter: home.local
+   computeCluster: cluster
+   hosts:
+     vmGroupName: workers-group-2
+     hostGroupName: host-group-2
+   datastore:
+   networks:
+---
+apiVersion: infrastructure.cluster.x-k8s.io/v1beta1
+kind: VSphereDeploymentZone
+metadata:
+ name: az-1
+spec:
+ server: vcenter.vmwire.com
+ failureDomain: az-1
+ placementConstraint:
+   resourcePool: tkg-vsphere-workload
+   folder: tkg-vsphere-workload
+---
+apiVersion: infrastructure.cluster.x-k8s.io/v1beta1
+kind: VSphereDeploymentZone
+metadata:
+ name: az-2
+spec:
+ server: vcenter.vmwire.com
+ failureDomain: az-2
+ placementConstraint:
+   resourcePool: tkg-vsphere-workload
+   folder: tkg-vsphere-workload
