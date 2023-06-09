@@ -9,6 +9,9 @@ NAMESPACE: default
 # CLUSTER_API_SERVER_PORT: # For deployments without NSX Advanced Load Balancer
 CNI: antrea
 ENABLE_DEFAULT_STORAGE_CLASS: false
+
+VSPHERE_AZ_CONTROL_PLANE_MATCHING_LABELS: "enforce-az:az-control-plane"
+
 #AVI_LABELS: '{"nsx-alb-cluster-ip-l7":"true", "enable-nsx-alb":"true"}'
 
 #! ---------------------------------------------------------------------
@@ -32,8 +35,8 @@ WORKER_SIZE: small
 
 #CONTROL_PLANE_MACHINE_COUNT: 1
 WORKER_MACHINE_COUNT: 4
-WORKER_MACHINE_COUNT_0: 2
-WORKER_MACHINE_COUNT_1: 2
+# WORKER_MACHINE_COUNT_0: 2
+# WORKER_MACHINE_COUNT_1: 2
 # WORKER_MACHINE_COUNT_2: 1
 
 #! ---------------------------------------------------------------------
