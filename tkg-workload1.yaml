@@ -10,6 +10,7 @@ NAMESPACE: default
 CNI: antrea
 ENABLE_DEFAULT_STORAGE_CLASS: false
 
+# TKG 2.3 only
 VSPHERE_AZ_CONTROL_PLANE_MATCHING_LABELS: "enforce-az:az-control-plane"
 
 #AVI_LABELS: '{"nsx-alb-cluster-ip-l7":"true", "enable-nsx-alb":"true"}'
