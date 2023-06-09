@@ -1,7 +1,7 @@
 # multi-az-on-vsphere-stretched-cluster
 multi-az on vSphere stretched cluster
 
-![image](https://github.com/hugopow/tkgm-az-vsphere-stretched-cluster/assets/20446316/343bca31-a8a6-478f-a086-4a392fcfe6e8)
+![image](https://github.com/hugopow/tkgm-az-vsphere-stretched-cluster/assets/20446316/15473853-ae56-4ca3-914c-7a16bd7cf628)
 
 
 Files used for AZ testing.
