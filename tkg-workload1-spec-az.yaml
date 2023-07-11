@@ -1,7 +1,7 @@
 apiVersion: cpi.tanzu.vmware.com/v1alpha1
 kind: VSphereCPIConfig
 metadata:
-  name: tkg-workload1
+  name: tkg-stretched
   namespace: default
 spec:
   vsphereCPI:
@@ -13,7 +13,7 @@ spec:
 apiVersion: csi.tanzu.vmware.com/v1alpha1
 kind: VSphereCSIConfig
 metadata:
-  name: tkg-workload1
+  name: tkg-stretched
   namespace: default
 spec:
   vsphereCSI:
@@ -21,9 +21,10 @@ spec:
       datacenter: /home.local
       httpProxy: ""
       httpsProxy: ""
+      insecureFlag: false
       noProxy: ""
       region: k8s-region
-      tlsThumbprint: CE:2F:6F:A1:0D:D9:F3:C0:96:A2:70:13:0F:39:F4:9A:DF:A1:79:CD
+      tlsThumbprint: 89:CE:DD:C1:25:30:26:CA:D3:46:9A:52:93:63:FB:72:B9:91:1C:E7
       useTopologyCategories: true
       zone: k8s-zone
     mode: vsphereCSI
@@ -32,8 +33,8 @@ apiVersion: run.tanzu.vmware.com/v1alpha3
 kind: ClusterBootstrap
 metadata:
   annotations:
-    tkg.tanzu.vmware.com/add-missing-fields-from-tkr: v1.25.7---vmware.2-tkg.1
-  name: tkg-workload1
+    tkg.tanzu.vmware.com/add-missing-fields-from-tkr: v1.26.5---vmware.2-tkg.1-rc.3
+  name: tkg-stretched
   namespace: default
 spec:
   additionalPackages:
@@ -50,21 +51,21 @@ spec:
       providerRef:
         apiGroup: cpi.tanzu.vmware.com
         kind: VSphereCPIConfig
-        name: tkg-workload1
+        name: tkg-stretched
   csi:
     refName: vsphere-csi*
     valuesFrom:
       providerRef:
         apiGroup: csi.tanzu.vmware.com
         kind: VSphereCSIConfig
-        name: tkg-workload1
+        name: tkg-stretched
   kapp:
     refName: kapp-controller*
 ---
 apiVersion: v1
 kind: Secret
 metadata:
-  name: tkg-workload1
+  name: tkg-stretched
   namespace: default
 stringData:
   password: Vmware1!
@@ -74,11 +75,11 @@ apiVersion: cluster.x-k8s.io/v1beta1
 kind: Cluster
 metadata:
   annotations:
-    osInfo: photon,3,amd64
+    osInfo: photon,3,
     tkg/plan: prod
   labels:
-    tkg.tanzu.vmware.com/cluster-name: tkg-workload1
-  name: tkg-workload1
+    tkg.tanzu.vmware.com/cluster-name: tkg-stretched
+  name: tkg-stretched
   namespace: default
 spec:
   clusterNetwork:
@@ -89,7 +90,7 @@ spec:
       cidrBlocks:
       - 100.64.0.0/13
   topology:
-    class: tkg-vsphere-default-v1.0.0
+    class: tkg-vsphere-default-v1.1.0
     controlPlane:
       metadata:
         annotations:
@@ -102,9 +103,12 @@ spec:
       value:
         activate: true
         daysBefore: 90
+    - name: imageRepository
+      value:
+        host: projects-stg.registry.vmware.com/tkg
     - name: additionalImageRegistries
       value:
-      - caCert: LS0tLS1CRUdJTiBDRVJUSUZJQ0FURS0tLS0tCk1JSUZGakNDQXY2Z0F3SUJBZ0lSQUpFckNFclBEQmluVS9iV0xpV25YMW93RFFZSktvWklodmNOQVFFTEJRQXcKVHpFTE1Ba0dBMVVFQmhNQ1ZWTXhLVEFuQmdOVkJBb1RJRWx1ZEdWeWJtVjBJRk5sWTNWeWFYUjVJRkpsYzJWaApjbU5vSUVkeWIzVndNUlV3RXdZRFZRUURFd3hKVTFKSElGSnZiM1FnV0RFd0hoY05NakF3T1RBME1EQXdNREF3CldoY05NalV3T1RFMU1UWXdNREF3V2pBeU1Rc3dDUVlEVlFRR0V3SlZVekVXTUJRR0ExVUVDaE1OVEdWMEozTWcKUlc1amNubHdkREVMTUFrR0ExVUVBeE1DVWpNd2dnRWlNQTBHQ1NxR1NJYjNEUUVCQVFVQUE0SUJEd0F3Z2dFSwpBb0lCQVFDN0FoVW96UGFnbE5NUEV1eU5WWkxEK0lMeG1hWjZRb2luWFNhcXRTdTV4VXl4cjQ1citYWElvOWNQClI1UVVWVFZYako2b29qa1o5WUk4UXFsT2J2VTd3eTdiamNDd1hQTlpPT2Z0ejJud1dnc2J2c0NVSkNXSCtqZHgKc3hQbkhLemhtKy9iNUR0RlVrV1dxY0ZUempUSVV1NjFydTJQM21CdzRxVlVxN1p0RHBlbFFEUnJLOU84WnV0bQpOSHo2YTR1UFZ5bVorREFYWGJweWIvdUJ4YTNTaGxnOUY4Zm5DYnZ4Sy9lRzNNSGFjVjNVUnVQTXJTWEJpTHhnClozVm1zL0VZOTZKYzVsUC9Pb2kyUjZYL0V4anFtQWwzUDUxVCtjOEI1ZldtY0JjVXIyT2svNW16azUzY1U2Y0cKL2tpRkhhRnByaVYxdXhQTVVnUDE3VkdoaTlzVkFnTUJBQUdqZ2dFSU1JSUJCREFPQmdOVkhROEJBZjhFQkFNQwpBWVl3SFFZRFZSMGxCQll3RkFZSUt3WUJCUVVIQXdJR0NDc0dBUVVGQndNQk1CSUdBMVVkRXdFQi93UUlNQVlCCkFmOENBUUF3SFFZRFZSME9CQllFRkJRdXN4ZTNXRmJMcmxBSlFPWWZyNTJMRk1MR01COEdBMVVkSXdRWU1CYUEKRkhtMFdlWjd0dVhrQVhPQUNJaklHbGoyNlp0dU1ESUdDQ3NHQVFVRkJ3RUJCQ1l3SkRBaUJnZ3JCZ0VGQlFjdwpBb1lXYUhSMGNEb3ZMM2d4TG1rdWJHVnVZM0l1YjNKbkx6QW5CZ05WSFI4RUlEQWVNQnlnR3FBWWhoWm9kSFJ3Ck9pOHZlREV1WXk1c1pXNWpjaTV2Y21jdk1DSUdBMVVkSUFRYk1Ca3dDQVlHWjRFTUFRSUJNQTBHQ3lzR0FRUUIKZ3Q4VEFRRUJNQTBHQ1NxR1NJYjNEUUVCQ3dVQUE0SUNBUUNGeWs1SFBxUDNoVVNGdk5WbmVMS1lZNjExVFI2VwpQVE5sY2xRdGdhRHF3KzM0SUw5ZnpMZHdBTGR1Ty9aZWxON2tJSittNzR1eUErZWl0Ulk4a2M2MDdUa0M1M3dsCmlrZm1aVzQvUnZUWjhNNlVLKzVVemhLOGpDZEx1TUdZTDZLdnpYR1JTZ2kzeUxnamV3UXRDUGtJVno2RDJRUXoKQ2tjaGVBbUNKOE1xeUp1NXpsenlaTWpBdm5uQVQ0NXRSQXhla3JzdTk0c1E0ZWdkUkNuYldTRHRZN2toK0JJbQpsSk5Yb0IxbEJNRUtJcTRRRFVPWG9SZ2ZmdURnaGplMVdyRzlNTCtIYmlzcS95Rk9Hd1hEOVJpWDhGNnN3Nlc0CmF2QXV2RHN6dWU1TDNzejg1SytFQzRZL3dGVkROdlpvNFRZWGFvNlowZitsUUtjMHQ4RFFZemsxT1hWdThycDIKeUpNQzZhbExiQmZPREFMWnZZSDduN2RvMUFabHM0STlkMVA0am5rRHJRb3hCM1VxUTloVmwzTEVLUTczeEYxTwp5SzVHaEREWDhvVmZHS0Y1dStkZWNJc0g0WWFUdzdtUDNHRnhKU3F2MyswbFVGSm9pNUxjNWRhMTQ5cDkwSWRzCmhDRXhyb0wxKzdtcnlJa1hQZUZNNVRnTzlyMHJ2WmFCRk92VjJ6MGdwMzVaMCtMNFdQbGJ1RWpOL2x4UEZpbisKSGxVanI4Z1JzSTNxZkpPUUZ5LzlyS0lKUjBZLzhPbXd0LzhvVFdneTFtZGVIbW1qazdqMW5Zc3ZDOUpTUTZadgpNbGRsVFRLQjN6aFRoVjErWFdZcDZyamQ1SlcxemJWV0VrTE54RTdHSlRoRVVHM3N6Z0JWR1A3cFNXVFVUc3FYCm5MUmJ3SE9vcTdoSHdnPT0KLS0tLS1FTkQgQ0VSVElGSUNBVEUtLS0tLQotLS0tLUJFR0lOIENFUlRJRklDQVRFLS0tLS0KTUlJRmF6Q0NBMU9nQXdJQkFnSVJBSUlRejdEU1FPTlpSR1BndTJPQ2l3QXdEUVlKS29aSWh2Y05BUUVMQlFBdwpUekVMTUFrR0ExVUVCaE1DVlZNeEtUQW5CZ05WQkFvVElFbHVkR1Z5Ym1WMElGTmxZM1Z5YVhSNUlGSmxjMlZoCmNtTm9JRWR5YjNWd01SVXdFd1lEVlFRREV3eEpVMUpISUZKdmIzUWdXREV3SGhjTk1UVXdOakEwTVRFd05ETTQKV2hjTk16VXdOakEwTVRFd05ETTRXakJQTVFzd0NRWURWUVFHRXdKVlV6RXBNQ2NHQTFVRUNoTWdTVzUwWlhKdQpaWFFnVTJWamRYSnBkSGtnVW1WelpXRnlZMmdnUjNKdmRYQXhGVEFUQmdOVkJBTVRERWxUVWtjZ1VtOXZkQ0JZCk1UQ0NBaUl3RFFZSktvWklodmNOQVFFQkJRQURnZ0lQQURDQ0Fnb0NnZ0lCQUszb0pIUDBGRGZ6bTU0clZ5Z2MKaDc3Y3Q5ODRrSXh1UE9aWG9IajNkY0tpL3ZWcWJ2WUFUeWpiM21pR2JFU1R0ckZqL1JRU2E3OGYwdW94bXlGKwowVE04dWtqMTNYbmZzN2ovRXZFaG1rdkJpb1p4YVVwbVpteVBmanh3djYwcElnYno1TURtZ0s3aVM0KzNtWDZVCkE1L1RSNWQ4bVVnalUrZzRyazhLYjRNdTBVbFhqSUIwdHRvdjBEaU5ld053SVJ0MThqQTgrbyt1M2RwanErc1cKVDhLT0VVdCt6d3ZvLzdWM0x2U3llMHJnVEJJbERIQ05BeW1nNFZNazdCUFo3aG0vRUxOS2pEK0pvMkZSM3F5SApCNVQwWTNIc0x1SnZXNWlCNFlsY05IbHNkdTg3a0dKNTV0dWttaThteGRBUTRRN2UyUkNPRnZ1Mzk2ajN4K1VDCkI1aVBOZ2lWNStJM2xnMDJkWjc3RG5LeEhadThBL2xKQmRpQjNRVzBLdFpCNmF3QmRwVUtEOWpmMWIwU0h6VXYKS0JkczBwakJxQWxrZDI1SE43ck9yRmxlYUoxL2N0YUp4UVpCS1Q1WlB0MG05U1RKRWFkYW8weEFIMGFobWJXbgpPbEZ1aGp1ZWZYS25FZ1Y0V2UwK1VYZ1ZDd09QamRBdkJiSStlMG9jUzNNRkV2ekc2dUJRRTN4RGszU3p5blRuCmpoOEJDTkF3MUZ0eE5yUUh1c0V3TUZ4SXQ0STdtS1o5WUlxaW95bUN6THE5Z3dRYm9vTURRYUhXQmZFYndyYncKcUh5R08wYW9TQ3FJM0hhYWRyOGZhcVU5R1kvck9QTmszc2dyRFFvby8vZmI0aFZDMUNMUUoxM2hlZjRZNTNDSQpyVTdtMllzNnh0MG5VVzcvdkdUMU0wTlBBZ01CQUFHalFqQkFNQTRHQTFVZER3RUIvd1FFQXdJQkJqQVBCZ05WCkhSTUJBZjhFQlRBREFRSC9NQjBHQTFVZERnUVdCQlI1dEZubWU3Ymw1QUZ6Z0FpSXlCcFk5dW1iYmpBTkJna3EKaGtpRzl3MEJBUXNGQUFPQ0FnRUFWUjlZcWJ5eXFGRFFETEhZR21rZ0p5a0lyR0YxWElwdStJTGxhUy9WOWxaTAp1Ymh6RUZuVElaZCs1MHh4KzdMU1lLMDVxQXZxRnlGV2hmRlFEbG5yenVCWjZickpGZStHblkrRWdQYms2WkdRCjNCZWJZaHRGOEdhVjBueHZ3dW83N3gvUHk5YXVKL0dwc01pdS9YMSttdm9pQk92LzJYL3FrU3Npc1JjT2ovS0sKTkZ0WTJQd0J5VlM1dUNiTWlvZ3ppVXd0aER5QzMrNldWd1c2TEx2M3hMZkhUanVDdmpISUluTnprdEhDZ0tRNQpPUkF6STRKTVBKK0dzbFdZSGI0cGhvd2ltNTdpYXp0WE9vSndUZHdKeDRuTENnZE5iT2hkanNudnpxdkh1N1VyClRrWFdTdEFtek9WeXlnaHFwWlhqRmFIM3BPM0pMRitsKy8rc0tBSXV2dGQ3dStOeGU1QVcwd2RlUmxOOE53ZEMKak5QRWxwelZtYlVxNEpVYWdFaXVURGtIenN4SHBGS1ZLN3E0KzYzU00xTjk1UjFOYmRXaHNjZENiK1pBSnpWYwpveWkzQjQzbmpUT1E1eU9mKzFDY2VXeEcxYlFWczVadWZwc01sanE0VWkwLzFsdmgrd2pDaFA0a3FLT0oycXhxCjRSZ3FzYWhEWVZ2VEg5dzdqWGJ5TGVpTmRkOFhNMnc5VS90N3kwRmYvOXlpMEdFNDRaYTRyRjJMTjlkMTFUUEEKbVJHdW5VSEJjbldFdmdKQlFsOW5KRWlVMFpzbnZnYy91YmhQZ1hSUjRYcTM3WjBqNHI3ZzFTZ0VFend4QTU3ZAplbXlQeGdjWXhuL2VSNDQvS0o0RUJzK2xWRFIzdmV5Sm0ra1hROTliMjEvK2poNVhvczFBblg1aUl0cmVHQ2M9Ci0tLS0tRU5EIENFUlRJRklDQVRFLS0tLS0=
+      - caCert: LS0tLS1CRUdJTiBDRVJUSUZJQ0FURS0tLS0tCk1JSUU1VENDQTgyZ0F3SUJBZ0lTQTFseHdSM3pTTGxjZFpBRVdSTjNSZjdOTUEwR0NTcUdTSWIzRFFFQkN3VUEKTURJeEN6QUpCZ05WQkFZVEFsVlRNUll3RkFZRFZRUUtFdzFNWlhRbmN5QkZibU55ZVhCME1Rc3dDUVlEVlFRRApFd0pTTXpBZUZ3MHlNekEzTURZd09ETXlORGxhRncweU16RXdNRFF3T0RNeU5EaGFNQmN4RlRBVEJnTlZCQU1NCkRDb3VkbTEzYVhKbExtTnZiVENDQVNJd0RRWUpLb1pJaHZjTkFRRUJCUUFEZ2dFUEFEQ0NBUW9DZ2dFQkFLZGgKN1FKeUFnUHdiT3VNSFdBM2c1c2RhOU9hZXVHTG1oNnJhQlpMWjFKMUwrZzdlaHdrM0dnQjhmQVN4bXFsQUg0TgpSeFVYdTZXbTBQUGpQOEMyMFZHZkdHN0krVUFISWh1aGdTcEFscTVMZkRTWDFDd21YZEw4Z1ZiMHFhdHpsNjZ2CmpaVG05TmxnYU8vYTd4RC82SENnMDdUUTdZZmg3djRLdGZLNFIyQWc1V2pPeXhkVTBvc3JZK3Mva01reWN5a0cKQTE1UGhHOGc4V2tDRnpmNkw5UUZ6RGxkU1g5bmE3amxjTE1JbDRGVnBLQkg3TWxtUWhNOXVyajNTNjlTMUJ4bgp6SzBZaitJSUtScG9nRHlTUXFDSEloenAxZzFOVWl5MVhacGNVdSt4eFBWU3UwZVVCNzFGZzlNMzVBdUlDOHdzCnFuMW56VUxqMlpQOUR1MS9hQ2NDQXdFQUFhT0NBZzR3Z2dJS01BNEdBMVVkRHdFQi93UUVBd0lGb0RBZEJnTlYKSFNVRUZqQVVCZ2dyQmdFRkJRY0RBUVlJS3dZQkJRVUhBd0l3REFZRFZSMFRBUUgvQkFJd0FEQWRCZ05WSFE0RQpGZ1FVMWc3LytIOXUvS1BCajEyamlCeUZiRDdQM2Rzd0h3WURWUjBqQkJnd0ZvQVVGQzZ6RjdkWVZzdXVVQWxBCjVoK3ZuWXNVd3NZd1ZRWUlLd1lCQlFVSEFRRUVTVEJITUNFR0NDc0dBUVVGQnpBQmhoVm9kSFJ3T2k4dmNqTXUKYnk1c1pXNWpjaTV2Y21jd0lnWUlLd1lCQlFVSE1BS0dGbWgwZEhBNkx5OXlNeTVwTG14bGJtTnlMbTl5Wnk4dwpGd1lEVlIwUkJCQXdEb0lNS2k1MmJYZHBjbVV1WTI5dE1CTUdBMVVkSUFRTU1Bb3dDQVlHWjRFTUFRSUJNSUlCCkJBWUtLd1lCQkFIV2VRSUVBZ1NCOVFTQjhnRHdBSFlBZWpLTVZOaTNMYllnNmpqZ1VoN3BoQlp3TWhPRlRUdlMKSzhFNlY2TlM2MUlBQUFHSktvd1BhUUFBQkFNQVJ6QkZBaUVBaWFSLzE3WDdKblMzUTI1Q3JNTHRnUU95bzRtOApiMlRwbEN1dm9pN0xCMG9DSUdxYncvTzhTSGRmeisxcEYwengxWm9OTWsvaXFJaXppanBpS01nQUNQdkRBSFlBCjZEN1EyajcxQmpVeTUxY292SWxyeVFQVHk5RVJhK3pyYWVGM2ZXMEd2VzRBQUFHSktvd1BVd0FBQkFNQVJ6QkYKQWlBWnVNSFJOelpPcmtpVVRnUllrOXV1V3hhNUFRcXg2cEdCMWtPUVpISCtQZ0loQU1hMXI0RE14ME1MMUt0bAp2NzdveEpKd2doYlFmVklCTkpIMTdQNTdxZUcxTUEwR0NTcUdTSWIzRFFFQkN3VUFBNElCQVFDWDhrWnFLOU8yCjVRclB2K2Nzc21nNlJMc0tiKy9LWFZjSnQ2SlpPSWhMcUlVaUtWK01aZjVhd3lLRlByc1A5MWk3bGZnZ21ESHYKaVlqVmVoZGF4eXdVMkdYdFZpNENZQy85SHZBRDhGYUY2amRoNCtKbGZ4MFdCN3huSW5MUVZUSXR5N0xYYWxyVAp3TWk1MjlQaWY3NmZuZFZ0Qmc3RHZjVWlCTWhIZGdKVFl4cWtSUlZRK1ZEZVB3QXh1cXB4R0dXZGlpZE9aaGY0CnZBUkwvYkVraVVwUFcvRWhoTDluUFhEcjdOSURGSWNZV0RUeGNTMkdnWWZRQ1R6RHlOVFU4NlY5cXFKVmxWRWsKU2hwVW84SElsMXVMK3JDUmlpa2FuVm5XZTkvUjI4VXhJeDZZYUVGdUZVMU5DRlZwdFVpd2ZSOVJIT2hMUVdocwpSUWR5QU5uOXc4WDcKLS0tLS1FTkQgQ0VSVElGSUNBVEUtLS0tLQ==
         host: harbor.vmwire.com
         skipTlsVerify: false
     - name: auditLogging
@@ -112,9 +116,9 @@ spec:
         enabled: false
     - name: podSecurityStandard
       value:
-        audit: baseline
+        audit: restricted
         deactivated: false
-        warn: baseline
+        warn: restricted
     - name: aviAPIServerHAProvider
       value: true
     - name: vcenter
@@ -127,8 +131,7 @@ spec:
         resourcePool: /home.local/host/cluster/Resources/tkg-vsphere-workload
         server: vcenter.vmwire.com
         storagePolicyID: ""
-        template: /home.local/vm/Templates/photon-3-kube-v1.25.7+vmware.2
-        tlsThumbprint: CE:2F:6F:A1:0D:D9:F3:C0:96:A2:70:13:0F:39:F4:9A:DF:A1:79:CD
+        tlsThumbprint: 89:CE:DD:C1:25:30:26:CA:D3:46:9A:52:93:63:FB:72:B9:91:1C:E7
     - name: user
       value:
         sshAuthorizedKeys:
@@ -145,7 +148,6 @@ spec:
           numCPUs: 2
     - name: worker
       value:
-        count: 4
         machine:
           customVMXKeys:
             ethernet0.ctxPerDev: "3"
@@ -154,7 +156,24 @@ spec:
           diskGiB: 20
           memoryMiB: 4096
           numCPUs: 2
-    version: v1.25.7+vmware.2-tkg.1
+    - name: security
+      value:
+        fileIntegrityMonitoring:
+          enabled: false
+        imagePolicy:
+          pullAlways: false
+          webhook:
+            enabled: false
+            spec:
+              allowTTL: 50
+              defaultAllow: true
+              denyTTL: 60
+              retryBackoff: 500
+        kubeletOptions:
+          eventQPS: 50
+          streamConnectionIdleTimeout: 4h0m0s
+        systemCryptoPolicy: default
+    version: v1.26.5+vmware.2-tkg.1-rc.3
     workers:
       machineDeployments:
       - class: tkg-worker
@@ -164,6 +183,8 @@ spec:
             run.tanzu.vmware.com/resolve-os-image: image-type=ova,os-name=photon
         name: md-0
         replicas: 2
+        strategy:
+          type: RollingUpdate
       - class: tkg-worker
         failureDomain: az-2
         metadata:
@@ -171,3 +192,5 @@ spec:
             run.tanzu.vmware.com/resolve-os-image: image-type=ova,os-name=photon
         name: md-1
         replicas: 2
+        strategy:
+          type: RollingUpdate
